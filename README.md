@@ -60,15 +60,17 @@ The Docker setup uses a `docker-compose.yml` file to define the services require
 Vite is used as the build tool for this Laravel project. The `vite.config.js` file includes the configuration necessary for Vite to work with Laravel and Vue.
 
 ```bash
-  server: {
-        hmr: {
-            clientPort: 3001,
-            host: true,
+ server: {
+            hmr: {
+                clientPort: 3001,
+                host: 'localhost',
+            },
+            host: '0.0.0.0',
+            port: 3001,
+            watch: {
+                usePolling: true,
+            },
         },
-        watch: {
-            usePolling: true,
-        },
-    }
 ```
 
 ## Using the Makefile
