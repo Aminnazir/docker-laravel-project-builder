@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    container_name: ${CONTAINER_PREFIX}_app
+    restart: unless-stopped
+    working_dir: /var/www/html
+    volumes:
+      - ./${PROJECT_FOLDER}:/var/www/html
+      - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
+    environment:
+      SERVICE_NAME: app
+      SERVICE_TAGS: dev
+    depends_on:
+       db :
+         condition: service_healthy
+    networks:
+      - app-network
+
+  webserver:
+    image: nginx:alpine
+    container_name: ${CONTAINER_PREFIX}_webserver
+    restart: unless-stopped
+    volumes:
+      - ./${PROJECT_FOLDER}:/var/www/html
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "${APP_PORT}:80"
+    depends_on:
+      - app
+    networks:
+      - app-network
+
+  db:
+    image: mysql:5.7
+    container_name: ${CONTAINER_PREFIX}_db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_USER: ${DB_USERNAME}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    healthcheck:
+      test: [ "CMD-SHELL", "mysql -h localhost -u $$MYSQL_USER -p$$MYSQL_PASSWORD -e 'SELECT 1;'" ]
+      interval: 5s
+      timeout: 30s
+      retries: 30
+      start_period: 30s
+    volumes:
+      - dbdata:/var/lib/mysql
+    ports:
+      - "${DB_PORT_EXTERNAL}:3306"
+    command:
+    - --default-authentication-plugin=mysql_native_password
+    networks:
+      - app-network
+
+  node:
+    image: node:latest
+    container_name: ${CONTAINER_PREFIX}_node
+    restart: always
+    volumes:
+      - ./${PROJECT_FOLDER}:/var/www/html
+    ports:
+      - ${VITE_PORT}:3001
+    working_dir: /var/www/html
+    tty: true
+    networks:
+      - app-network
+
+  pma:
+    image: phpmyadmin/phpmyadmin
+    container_name: ${CONTAINER_PREFIX}_pma
+    restart: unless-stopped
+    environment:
+      PMA_HOST: db
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    ports:
+      - "${PMA_PORT}:80"
+    depends_on:
+      - db
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    name: ${CONTAINER_PREFIX}_network
+    driver: bridge
+
+volumes:
+  dbdata:
+    driver: local
