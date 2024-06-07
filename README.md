@@ -44,8 +44,8 @@ The Makefile includes several commands to manage your Laravel project. Below is 
 ### Other Useful Commands
 - `logs`: Views logs of Docker containers.
 - `fix-permissions`: Fixes file and folder permissions for Laravel.
-- `install-laravel-ui: Installs Laravel UI and sets up authentication.
-- `auth-setup: Sets up authentication (alias for install-laravel-ui).
+- `install-laravel-ui`: Installs Laravel UI and sets up authentication.
+- `auth-setup: Sets up` authentication (alias for install-laravel-ui).
 
 
 ### SSH Commands
